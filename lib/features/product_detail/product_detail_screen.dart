@@ -24,6 +24,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
   int _currentImageIndex = 0;
   String _selectedSize = '';
   String _selectedFinish = '';
+  int _selectedColorIndex = 0;
 
   @override
   Widget build(BuildContext context) {
@@ -36,8 +37,15 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
     return productAsync.when(
       data: (product) {
         if (product == null) {
-          return const Scaffold(
-            body: Center(child: Text('Product Not Found')),
+          return Scaffold(
+            backgroundColor: AppColors.creamBackground,
+            appBar: AppBar(title: const Text('Not Found')),
+            body: Center(
+              child: Text(
+                isGu ? 'પ્રોડક્ટ મળી નથી' : 'Product Not Found',
+                style: const TextStyle(color: AppColors.textSecondary),
+              ),
+            ),
           );
         }
 
@@ -55,10 +63,16 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
         return Scaffold(
           backgroundColor: AppColors.creamBackground,
           appBar: AppBar(
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back_ios_new_rounded, color: AppColors.textPrimary),
+              onPressed: () => context.pop(),
+            ),
             actions: [
               IconButton(
                 icon: Icon(
-                  isFav ? Icons.favorite : Icons.favorite_border,
+                  isFav ? Icons.favorite : Icons.favorite_border_rounded,
                   color: isFav ? AppColors.favoriteRed : AppColors.textPrimary,
                 ),
                 onPressed: () => ref
@@ -66,7 +80,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                     .toggleFavorite(product.id),
               ),
               IconButton(
-                icon: const Icon(Icons.share_outlined),
+                icon: const Icon(Icons.share_outlined, color: AppColors.textPrimary),
                 onPressed: () {
                   WhatsAppHelper.launchWhatsApp(
                     context: context,
@@ -87,11 +101,11 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
             decoration: BoxDecoration(
               color: AppColors.creamCard,
               border: const Border(
-                top: BorderSide(color: AppColors.creamCardBorder, width: 1),
+                top: BorderSide(color: AppColors.creamCardBorder, width: 1.2),
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withAlpha(20),
+                  color: Colors.black.withOpacity(0.05),
                   blurRadius: 10,
                   offset: const Offset(0, -3),
                 ),
@@ -99,10 +113,10 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
             ),
             child: Row(
               children: [
-                // Add to Enquiry Button
+                // Add to Enquiry Button (Black Variant)
                 Expanded(
                   child: GoldButton(
-                    text: isGu ? 'પૂછપરછ લિસ્ટમાં ઉમેરો' : 'Add to Enquiry',
+                    text: isGu ? 'પૂછપરછ લિસ્ટ' : 'Add to Enquiry',
                     variant: GoldButtonVariant.black,
                     icon: Icons.playlist_add_rounded,
                     height: 48,
@@ -128,6 +142,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                           ),
                           action: SnackBarAction(
                             label: isGu ? 'જુઓ' : 'View',
+                            textColor: AppColors.goldAccent,
                             onPressed: () => context.push('/enquiry'),
                           ),
                         ),
@@ -136,7 +151,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                   ),
                 ),
                 const SizedBox(width: 12),
-                // Direct WhatsApp Enquiry Button
+                // Direct WhatsApp Enquiry Button (Gold Variant)
                 Expanded(
                   child: GoldButton(
                     text: 'WhatsApp Enquiry',
@@ -161,12 +176,13 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
             ),
           ),
           body: SingleChildScrollView(
+            physics: const BouncingScrollPhysics(),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Gallery Carousel
+                // Swipeable Gallery Carousel (Screen 7)
                 SizedBox(
-                  height: 320,
+                  height: 330,
                   child: Stack(
                     children: [
                       PageView.builder(
@@ -183,24 +199,25 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                           );
                         },
                       ),
-                      // Dots Indicator
+                      // Carousel Dots Indicator
                       if (product.images.length > 1)
                         Positioned(
-                          bottom: 12,
+                          bottom: 14,
                           left: 0,
                           right: 0,
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: List.generate(
                               product.images.length,
-                              (i) => Container(
+                              (i) => AnimatedContainer(
+                                duration: const Duration(milliseconds: 300),
                                 margin: const EdgeInsets.symmetric(horizontal: 3),
-                                width: _currentImageIndex == i ? 18 : 6,
+                                width: _currentImageIndex == i ? 20 : 6,
                                 height: 6,
                                 decoration: BoxDecoration(
                                   color: _currentImageIndex == i
                                       ? AppColors.goldStart
-                                      : Colors.white.withAlpha(150),
+                                      : Colors.white.withOpacity(0.6),
                                   borderRadius: BorderRadius.circular(3),
                                 ),
                               ),
@@ -211,15 +228,24 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                   ),
                 ),
 
-                Padding(
-                  padding: const EdgeInsets.all(20),
+                // Details Card container
+                Container(
+                  padding: const EdgeInsets.all(22),
+                  decoration: const BoxDecoration(
+                    color: AppColors.creamCard,
+                    borderRadius: BorderRadius.vertical(top: Radius.circular(26)),
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Product Name
+                      // Product Title
                       Text(
                         name,
-                        style: AppTypography.heading(fontSize: 22),
+                        style: AppTypography.heading(
+                          fontSize: 22,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.textPrimary,
+                        ),
                       ),
                       const SizedBox(height: 4),
                       Text(
@@ -230,16 +256,16 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                           color: AppColors.textSecondary,
                         ),
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 14),
 
-                      // Price Tag (View-only / Best price inquiry)
+                      // Price Tag (View-only policy: Best Price on Inquiry)
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                         decoration: BoxDecoration(
-                          color: AppColors.goldStart.withAlpha(30),
+                          color: AppColors.goldStart.withOpacity(0.12),
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
-                            color: AppColors.goldStart.withAlpha(100),
+                            color: AppColors.goldStart.withOpacity(0.4),
                           ),
                         ),
                         child: Text(
@@ -257,15 +283,16 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                         ),
                       ),
 
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 22),
 
-                      // Sizes
+                      // Available Sizes
                       Text(
-                        isGu ? 'ઉપલબ્ધ સાઈઝ / Available Sizes' : 'Available Sizes',
+                        isGu ? 'ઉપલબ્ધ સાઈઝ' : 'Available Sizes',
                         style: AppTypography.dynamicBody(
                           'Available Sizes',
-                          fontSize: 14,
+                          fontSize: 13,
                           fontWeight: FontWeight.w700,
+                          color: AppColors.textPrimary,
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -274,8 +301,23 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                         children: product.sizes.map((s) {
                           final isSel = s == _selectedSize;
                           return ChoiceChip(
-                            label: Text(s),
+                            label: Text(
+                              s,
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: isSel ? AppColors.goldButtonText : AppColors.textPrimary,
+                              ),
+                            ),
                             selected: isSel,
+                            selectedColor: AppColors.goldStart,
+                            backgroundColor: const Color(0xFFFBF6EE),
+                            side: BorderSide(
+                              color: isSel ? AppColors.goldStart : AppColors.creamCardBorder,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
                             onSelected: (_) => setState(() => _selectedSize = s),
                           );
                         }).toList(),
@@ -285,11 +327,12 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
 
                       // Finishes
                       Text(
-                        isGu ? 'ફિનિશ / Finishes' : 'Finishes',
+                        isGu ? 'ફિનિશ પ્રકાર' : 'Surface Finish',
                         style: AppTypography.dynamicBody(
-                          'Finishes',
-                          fontSize: 14,
+                          'Surface Finish',
+                          fontSize: 13,
                           fontWeight: FontWeight.w700,
+                          color: AppColors.textPrimary,
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -298,52 +341,92 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                         children: product.finishes.map((f) {
                           final isSel = f == _selectedFinish;
                           return ChoiceChip(
-                            label: Text(f),
+                            label: Text(
+                              f,
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: isSel ? AppColors.goldButtonText : AppColors.textPrimary,
+                              ),
+                            ),
                             selected: isSel,
+                            selectedColor: AppColors.goldStart,
+                            backgroundColor: const Color(0xFFFBF6EE),
+                            side: BorderSide(
+                              color: isSel ? AppColors.goldStart : AppColors.creamCardBorder,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
                             onSelected: (_) => setState(() => _selectedFinish = f),
                           );
                         }).toList(),
                       ),
 
+                      // Color Swatches Viewer (Special for Colors/Decor category & multi-shade tiles)
                       if (product.colorHexes.isNotEmpty) ...[
                         const SizedBox(height: 18),
                         Text(
-                          isGu ? 'રંગો / Colors' : 'Color Shades',
+                          isGu ? 'કલર શેડ્સ (Color Swatches)' : 'Color Shade Swatches',
                           style: AppTypography.dynamicBody(
-                            'Color Shades',
-                            fontSize: 14,
+                            'Color Shade Swatches',
+                            fontSize: 13,
                             fontWeight: FontWeight.w700,
+                            color: AppColors.textPrimary,
                           ),
                         ),
-                        const SizedBox(height: 8),
-                        Row(
-                          children: product.colorHexes.map((hex) {
-                            return Container(
-                              margin: const EdgeInsets.only(right: 10),
-                              width: 32,
-                              height: 32,
-                              decoration: BoxDecoration(
-                                color: Color(hex),
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: Colors.black26,
-                                  width: 1.5,
+                        const SizedBox(height: 10),
+                        Wrap(
+                          spacing: 12,
+                          runSpacing: 10,
+                          children: List.generate(product.colorHexes.length, (idx) {
+                            final hex = product.colorHexes[idx];
+                            final isSel = _selectedColorIndex == idx;
+                            return GestureDetector(
+                              onTap: () => setState(() => _selectedColorIndex = idx),
+                              child: Container(
+                                width: 38,
+                                height: 38,
+                                decoration: BoxDecoration(
+                                  color: Color(hex),
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: isSel ? AppColors.goldStart : Colors.black12,
+                                    width: isSel ? 3.0 : 1.2,
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.08),
+                                      blurRadius: 4,
+                                      offset: const Offset(0, 2),
+                                    ),
+                                  ],
                                 ),
+                                child: isSel
+                                    ? const Center(
+                                        child: Icon(
+                                          Icons.check,
+                                          size: 18,
+                                          color: Colors.white,
+                                        ),
+                                      )
+                                    : null,
                               ),
                             );
-                          }).toList(),
+                          }),
                         ),
                       ],
 
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 22),
 
-                      // Description
+                      // Description Section
                       Text(
-                        isGu ? 'વર્ણન / Description' : 'Description',
+                        isGu ? 'વિશેષતા અને વર્ણન' : 'Description & Specifications',
                         style: AppTypography.dynamicBody(
-                          'Description',
-                          fontSize: 14,
+                          'Description & Specifications',
+                          fontSize: 13,
                           fontWeight: FontWeight.w700,
+                          color: AppColors.textPrimary,
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -353,9 +436,11 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                           description,
                           fontSize: 13,
                           color: AppColors.textSecondary,
-                          height: 1.5,
+                          height: 1.55,
                         ),
                       ),
+
+                      const SizedBox(height: 20),
                     ],
                   ),
                 ),
@@ -365,9 +450,15 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
         );
       },
       loading: () => const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
+        backgroundColor: AppColors.creamBackground,
+        body: Center(
+          child: CircularProgressIndicator(
+            valueColor: AlwaysStoppedAnimation<Color>(AppColors.goldStart),
+          ),
+        ),
       ),
       error: (err, _) => Scaffold(
+        backgroundColor: AppColors.creamBackground,
         body: Center(child: Text('Error: $err')),
       ),
     );
