@@ -18,6 +18,8 @@ class AppConfig {
       'https://www.google.com/maps/search/?api=1&query=Murlidhar+Ceramics+Friends+Square+Manavadar';
 
   static const String logoPath = 'assets/images/logo.png';
+  static const String logoSplashPath = 'assets/images/logo_splash.png';
+  static const String logoLoginPath = 'assets/images/logo_login.png';
   static const String referenceUiPath = 'assets/reference/ui.png';
 
   // Toggle between Mock data and live Firebase (Phase 6)

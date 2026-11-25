@@ -10,9 +10,10 @@ void main() {
       ),
     );
 
-    // Initial frame pump and settle the splash timer
-    await tester.pump(const Duration(milliseconds: 100));
-    await tester.pumpAndSettle(const Duration(seconds: 3));
+    // Initial frame pump
+    await tester.pump();
+    // Advance past the 2.8s splash timer
+    await tester.pump(const Duration(milliseconds: 3000));
     expect(find.byType(MurlidharCeramicApp), findsOneWidget);
   });
 }
