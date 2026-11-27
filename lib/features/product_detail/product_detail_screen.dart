@@ -158,17 +158,45 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                     variant: GoldButtonVariant.gold,
                     icon: Icons.chat_outlined,
                     height: 48,
-                    onPressed: () {
-                      WhatsAppHelper.launchWhatsApp(
-                        context: context,
-                        message: WhatsAppHelper.buildSingleItemMessage(
-                          userName: user?.name ?? 'Customer',
-                          itemName: '${product.nameGujarati} (${product.nameEnglish})',
-                          category: product.categoryId,
-                          size: _selectedSize,
-                          finish: _selectedFinish,
-                        ),
+                    onPressed: () async {
+                      final userName = user?.name ?? 'Customer';
+                      final item = EnquiryItem(
+                        productId: product.id,
+                        productNameGujarati: product.nameGujarati,
+                        productNameEnglish: product.nameEnglish,
+                        categoryName: product.categoryId,
+                        selectedSize: _selectedSize,
+                        selectedFinish: _selectedFinish,
+                        imageUrl: product.images.first,
+                        showPrice: product.showPrice,
+                        pricePerSqFt: product.pricePerSqFt,
                       );
+                      final enquiry = EnquiryModel(
+                        id: 'enq_${DateTime.now().millisecondsSinceEpoch}',
+                        customerName: userName,
+                        customerPhone: user?.phone ?? '',
+                        items: [item],
+                        status: EnquiryStatus.pending,
+                        createdAt: DateTime.now(),
+                      );
+                      await ref
+                          .read(enquiryRepositoryProvider)
+                          .recordSentEnquiry(enquiry);
+                      ref.invalidate(myEnquiriesProvider);
+
+                      if (context.mounted) {
+                        await WhatsAppHelper.launchWhatsApp(
+                          context: context,
+                          message: WhatsAppHelper.buildSingleItemMessage(
+                            userName: userName,
+                            itemName:
+                                '${product.nameGujarati} (${product.nameEnglish})',
+                            category: product.categoryId,
+                            size: _selectedSize,
+                            finish: _selectedFinish,
+                          ),
+                        );
+                      }
                     },
                   ),
                 ),

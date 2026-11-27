@@ -58,6 +58,23 @@ class EnquiryItem {
       'pricePerSqFt': pricePerSqFt,
     };
   }
+
+  EnquiryItem copyWith({
+    String? note,
+  }) {
+    return EnquiryItem(
+      productId: productId,
+      productNameGujarati: productNameGujarati,
+      productNameEnglish: productNameEnglish,
+      categoryName: categoryName,
+      selectedSize: selectedSize,
+      selectedFinish: selectedFinish,
+      imageUrl: imageUrl,
+      note: note ?? this.note,
+      showPrice: showPrice,
+      pricePerSqFt: pricePerSqFt,
+    );
+  }
 }
 
 class EnquiryModel {

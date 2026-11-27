@@ -35,6 +35,11 @@ final popularProductsProvider = FutureProvider<List<ProductModel>>((ref) async {
   return repo.getPopularProducts();
 });
 
+final allProductsProvider = FutureProvider<List<ProductModel>>((ref) async {
+  final repo = ref.watch(catalogRepositoryProvider);
+  return repo.getProducts();
+});
+
 final featuredProductsProvider = FutureProvider<List<ProductModel>>((ref) async {
   final repo = ref.watch(catalogRepositoryProvider);
   return repo.getFeaturedProducts();
@@ -130,6 +135,16 @@ class EnquiryCartNotifier extends StateNotifier<List<EnquiryItem>> {
     state = await _repo.getEnquiryCartItems();
   }
 
+  Future<void> updateItemNote(
+    String productId,
+    String size,
+    String finish,
+    String? note,
+  ) async {
+    await _repo.updateEnquiryCartItemNote(productId, size, finish, note);
+    state = await _repo.getEnquiryCartItems();
+  }
+
   Future<void> removeItem(String productId, String size, String finish) async {
     await _repo.removeFromEnquiryCart(productId, size, finish);
     state = await _repo.getEnquiryCartItems();
@@ -152,6 +167,11 @@ final enquiryCartProvider =
     StateNotifierProvider<EnquiryCartNotifier, List<EnquiryItem>>((ref) {
   final repo = ref.watch(enquiryRepositoryProvider);
   return EnquiryCartNotifier(repo);
+});
+
+final myEnquiriesProvider = FutureProvider<List<EnquiryModel>>((ref) async {
+  final repo = ref.watch(enquiryRepositoryProvider);
+  return repo.getMyEnquiries();
 });
 
 // Favorites Notifier (Persisted locally in SharedPreferences)

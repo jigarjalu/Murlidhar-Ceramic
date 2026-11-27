@@ -14,6 +14,7 @@ import '../../features/search/search_screen.dart';
 import '../../features/filters/filters_screen.dart';
 import '../../features/favorites/favorites_screen.dart';
 import '../../features/enquiry/enquiry_list_screen.dart';
+import '../../features/enquiry/my_enquiries_screen.dart';
 import '../../features/profile/profile_screen.dart';
 import '../../features/about/about_screen.dart';
 import '../../features/admin/admin_login_screen.dart';
@@ -129,6 +130,13 @@ class AppRouter {
         pageBuilder: (context, state) => AppTransitions.fadeThrough(
           key: state.pageKey,
           child: const EnquiryListScreen(),
+        ),
+      ),
+      GoRoute(
+        path: '/my-enquiries',
+        pageBuilder: (context, state) => AppTransitions.sharedAxisX(
+          key: state.pageKey,
+          child: const MyEnquiriesScreen(),
         ),
       ),
       GoRoute(

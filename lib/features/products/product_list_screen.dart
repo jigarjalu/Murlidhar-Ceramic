@@ -22,6 +22,8 @@ class ProductListScreen extends ConsumerStatefulWidget {
 
 class _ProductListScreenState extends ConsumerState<ProductListScreen> {
   String _selectedSize = 'All';
+  String _selectedFinish = 'All';
+  String _selectedColor = 'All';
   String _selectedSort = 'default'; // 'default', 'nameAsc', 'nameDesc'
 
   final List<String> _sizes = [
@@ -127,10 +129,18 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
           Expanded(
             child: productsAsync.when(
               data: (products) {
-                // Filter by size
-                var filtered = _selectedSize == 'All'
-                    ? products
-                    : products.where((p) => p.sizes.contains(_selectedSize)).toList();
+                // Filter by size, finish & color
+                var filtered = products.where((p) {
+                  final matchSize =
+                      _selectedSize == 'All' || p.sizes.contains(_selectedSize);
+                  final matchFinish = _selectedFinish == 'All' ||
+                      p.finishes.any((f) =>
+                          f.toLowerCase().contains(_selectedFinish.toLowerCase()));
+                  final matchColor = _selectedColor == 'All' ||
+                      p.colors.any((c) =>
+                          c.toLowerCase().contains(_selectedColor.toLowerCase()));
+                  return matchSize && matchFinish && matchColor;
+                }).toList();
 
                 // Sort logic
                 if (_selectedSort == 'nameAsc') {
@@ -304,7 +314,17 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
           children: [
             Expanded(
               child: InkWell(
-                onTap: () => context.push('/filters'),
+                onTap: () async {
+                  final res =
+                      await context.push<Map<String, String>>('/filters');
+                  if (res != null && mounted) {
+                    setState(() {
+                      _selectedSize = res['size'] ?? 'All';
+                      _selectedFinish = res['finish'] ?? 'All';
+                      _selectedColor = res['color'] ?? 'All';
+                    });
+                  }
+                },
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [

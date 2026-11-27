@@ -157,6 +157,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           icon: const Icon(Icons.favorite_border_rounded, color: Colors.white, size: 22),
                           onPressed: () => context.push('/favorites'),
                         ),
+                        IconButton(
+                          icon: const Icon(Icons.person_outline_rounded, color: Colors.white, size: 22),
+                          onPressed: () => context.push('/profile'),
+                        ),
                       ],
                     ),
 

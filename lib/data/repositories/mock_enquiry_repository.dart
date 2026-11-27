@@ -99,6 +99,38 @@ class MockEnquiryRepository implements EnquiryRepository {
   }
 
   @override
+  Future<void> updateEnquiryCartItemNote(
+    String productId,
+    String size,
+    String finish,
+    String? note,
+  ) async {
+    final items = await getEnquiryCartItems();
+    final idx = items.indexWhere(
+      (e) =>
+          e.productId == productId &&
+          e.selectedSize == size &&
+          e.selectedFinish == finish,
+    );
+    if (idx != -1) {
+      final cleanNote = (note != null && note.trim().isNotEmpty) ? note.trim() : null;
+      items[idx] = EnquiryItem(
+        productId: items[idx].productId,
+        productNameGujarati: items[idx].productNameGujarati,
+        productNameEnglish: items[idx].productNameEnglish,
+        categoryName: items[idx].categoryName,
+        selectedSize: items[idx].selectedSize,
+        selectedFinish: items[idx].selectedFinish,
+        imageUrl: items[idx].imageUrl,
+        note: cleanNote,
+        showPrice: items[idx].showPrice,
+        pricePerSqFt: items[idx].pricePerSqFt,
+      );
+      await _saveCart(items);
+    }
+  }
+
+  @override
   Future<void> removeFromEnquiryCart(
     String productId,
     String size,

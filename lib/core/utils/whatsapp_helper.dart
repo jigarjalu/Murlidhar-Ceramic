@@ -60,18 +60,29 @@ class WhatsAppHelper {
     return buffer.toString();
   }
 
+  /// Build direct WhatsApp app URI
+  static Uri buildWhatsAppUri(String message) {
+    final encodedMessage = Uri.encodeComponent(message);
+    return Uri.parse(
+      'whatsapp://send?phone=${AppConfig.whatsappNumber}&text=$encodedMessage',
+    );
+  }
+
+  /// Build https://wa.me fallback URI
+  static Uri buildWebFallbackUri(String message) {
+    final encodedMessage = Uri.encodeComponent(message);
+    return Uri.parse('${AppConfig.whatsappUrl}?text=$encodedMessage');
+  }
+
   /// Launch WhatsApp with given text, fallback to browser link and snackbar
   static Future<bool> launchWhatsApp({
     required BuildContext context,
     required String message,
   }) async {
-    final encodedMessage = Uri.encodeComponent(message);
-    const phone = AppConfig.whatsappNumber;
-
     // Direct whatsapp URL scheme
-    final whatsappSchemeUri = Uri.parse('whatsapp://send?phone=$phone&text=$encodedMessage');
+    final whatsappSchemeUri = buildWhatsAppUri(message);
     // Web fallback URL
-    final webFallbackUri = Uri.parse('https://wa.me/$phone?text=$encodedMessage');
+    final webFallbackUri = buildWebFallbackUri(message);
 
     try {
       if (await canLaunchUrl(whatsappSchemeUri)) {
