@@ -5,33 +5,60 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_typography.dart';
 import '../../data/models/product_model.dart';
 import '../../widgets/glass_card.dart';
-import '../../widgets/gold_button.dart';
 import '../../widgets/product_image.dart';
 import '../common/providers/app_providers.dart';
 
 class AdminProductsScreen extends ConsumerWidget {
   const AdminProductsScreen({super.key});
 
-  void _showAddProductDialog(BuildContext context, WidgetRef ref) {
-    final guNameController = TextEditingController();
-    final enNameController = TextEditingController();
-    final sizeController = TextEditingController(text: '600x1200');
-    final finishController = TextEditingController(text: 'High Gloss');
-    bool showPrice = false;
-    final priceController = TextEditingController();
+  void _showProductFormDialog(
+    BuildContext context,
+    WidgetRef ref, {
+    ProductModel? existing,
+  }) {
+    final guNameController =
+        TextEditingController(text: existing?.nameGujarati ?? '');
+    final enNameController =
+        TextEditingController(text: existing?.nameEnglish ?? '');
+    final categoryController =
+        TextEditingController(text: existing?.categoryId ?? 'cat_vitrified');
+    final sizeController =
+        TextEditingController(text: existing?.sizes.join(', ') ?? '600x1200, 800x800');
+    final finishController =
+        TextEditingController(text: existing?.finishes.join(', ') ?? 'High Gloss, Matt');
+    final colorController =
+        TextEditingController(text: existing?.colors.join(', ') ?? 'White, Beige');
+    final imageController = TextEditingController(
+      text: existing?.images.firstOrNull ??
+          'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=500&q=80',
+    );
+    bool showPrice = existing?.showPrice ?? false;
+    final priceController = TextEditingController(
+      text: existing?.pricePerSqFt != null
+          ? existing!.pricePerSqFt!.toStringAsFixed(0)
+          : '',
+    );
 
     showDialog<void>(
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setDialogState) => AlertDialog(
-          title: const Text('Add New Product'),
+          backgroundColor: AppColors.creamCard,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: Text(
+            existing == null ? '+ Add Product' : 'Edit Product',
+            style: AppTypography.heading(fontSize: 18),
+          ),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 TextField(
                   controller: guNameController,
-                  decoration: const InputDecoration(labelText: 'ગુજરાતી નામ / Gujarati Name'),
+                  decoration: const InputDecoration(
+                    labelText: 'ગુજરાતી નામ (Gujarati Name)',
+                  ),
                 ),
                 const SizedBox(height: 10),
                 TextField(
@@ -39,27 +66,73 @@ class AdminProductsScreen extends ConsumerWidget {
                   decoration: const InputDecoration(labelText: 'English Name'),
                 ),
                 const SizedBox(height: 10),
+                DropdownButtonFormField<String>(
+                  value: AppConfig.categories.any(
+                          (c) => c['id'] == categoryController.text)
+                      ? categoryController.text
+                      : AppConfig.categories.first['id'],
+                  decoration: const InputDecoration(labelText: 'Category'),
+                  items: AppConfig.categories.map((c) {
+                    return DropdownMenuItem<String>(
+                      value: c['id'],
+                      child: Text('${c['gu']} (${c['en']})',
+                          style: const TextStyle(fontSize: 12)),
+                    );
+                  }).toList(),
+                  onChanged: (val) {
+                    if (val != null) {
+                      setDialogState(() => categoryController.text = val);
+                    }
+                  },
+                ),
+                const SizedBox(height: 10),
                 TextField(
                   controller: sizeController,
-                  decoration: const InputDecoration(labelText: 'Sizes (e.g. 600x1200, 800x800)'),
+                  decoration: const InputDecoration(
+                    labelText: 'Sizes (comma separated: 600x600, 800x800)',
+                  ),
                 ),
                 const SizedBox(height: 10),
                 TextField(
                   controller: finishController,
-                  decoration: const InputDecoration(labelText: 'Finish (e.g. Glossy, Matt)'),
+                  decoration: const InputDecoration(
+                    labelText: 'Finishes (comma separated: Glossy, Matt)',
+                  ),
+                ),
+                const SizedBox(height: 10),
+                TextField(
+                  controller: colorController,
+                  decoration: const InputDecoration(
+                    labelText: 'Colors (comma separated: White, Grey)',
+                  ),
+                ),
+                const SizedBox(height: 10),
+                TextField(
+                  controller: imageController,
+                  decoration: const InputDecoration(
+                    labelText: 'Image URL',
+                  ),
                 ),
                 const SizedBox(height: 10),
                 CheckboxListTile(
                   contentPadding: EdgeInsets.zero,
                   title: const Text('Show Price to Customers'),
+                  subtitle: const Text(
+                    'When disabled, customers see "Inquiry for best price"',
+                    style: TextStyle(fontSize: 11),
+                  ),
                   value: showPrice,
+                  activeColor: AppColors.goldStart,
                   onChanged: (v) => setDialogState(() => showPrice = v ?? false),
                 ),
                 if (showPrice)
                   TextField(
                     controller: priceController,
                     keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(labelText: 'Price per Sq Ft (₹)'),
+                    decoration: const InputDecoration(
+                      labelText: 'Price per Sq Ft (₹)',
+                      prefixText: '₹ ',
+                    ),
                   ),
               ],
             ),
@@ -70,26 +143,68 @@ class AdminProductsScreen extends ConsumerWidget {
               child: const Text('Cancel'),
             ),
             ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.goldStart,
+                foregroundColor: AppColors.goldButtonText,
+              ),
               onPressed: () async {
-                final newProduct = ProductModel(
-                  id: 'prod_custom_${DateTime.now().millisecondsSinceEpoch}',
-                  categoryId: 'cat_vitrified',
-                  nameGujarati: guNameController.text.trim().isEmpty ? 'નવી ટાઈલ' : guNameController.text.trim(),
-                  nameEnglish: enNameController.text.trim().isEmpty ? 'New Tile' : enNameController.text.trim(),
-                  sizes: sizeController.text.split(',').map((s) => s.trim()).toList(),
-                  finishes: finishController.text.split(',').map((f) => f.trim()).toList(),
-                  colors: ['White'],
-                  images: ['https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=500&q=80'],
-                  descriptionGujarati: 'પ્રીમિયમ ટાઈલ્સ',
-                  descriptionEnglish: 'Premium quality ceramic tiles',
+                final product = ProductModel(
+                  id: existing?.id ??
+                      'prod_custom_${DateTime.now().millisecondsSinceEpoch}',
+                  categoryId: categoryController.text.trim(),
+                  nameGujarati: guNameController.text.trim().isEmpty
+                      ? 'નવી ટાઈલ'
+                      : guNameController.text.trim(),
+                  nameEnglish: enNameController.text.trim().isEmpty
+                      ? 'New Tile'
+                      : enNameController.text.trim(),
+                  sizes: sizeController.text
+                      .split(',')
+                      .map((s) => s.trim())
+                      .where((s) => s.isNotEmpty)
+                      .toList(),
+                  finishes: finishController.text
+                      .split(',')
+                      .map((f) => f.trim())
+                      .where((f) => f.isNotEmpty)
+                      .toList(),
+                  colors: colorController.text
+                      .split(',')
+                      .map((c) => c.trim())
+                      .where((c) => c.isNotEmpty)
+                      .toList(),
+                  images: [
+                    imageController.text.trim().isNotEmpty
+                        ? imageController.text.trim()
+                        : 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=500&q=80'
+                  ],
+                  descriptionGujarati: 'પ્રીમિયમ ટાઈલ્સ અને સિરામિક સોલ્યુશન',
+                  descriptionEnglish:
+                      'Premium quality tiles with unmatched finish.',
                   showPrice: showPrice,
                   pricePerSqFt: double.tryParse(priceController.text.trim()),
                 );
-                await ref.read(catalogRepositoryProvider).addProduct(newProduct);
+
+                if (existing == null) {
+                  await ref
+                      .read(catalogRepositoryProvider)
+                      .addProduct(product);
+                } else {
+                  await ref
+                      .read(catalogRepositoryProvider)
+                      .updateProduct(product);
+                }
+                ref.invalidate(allProductsProvider);
+                ref.invalidate(popularProductsProvider);
+
                 if (ctx.mounted) {
                   Navigator.pop(ctx);
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Product added successfully!')),
+                    SnackBar(
+                      content: Text(existing == null
+                          ? 'Product added successfully!'
+                          : 'Product updated successfully!'),
+                    ),
                   );
                 }
               },
@@ -101,85 +216,156 @@ class AdminProductsScreen extends ConsumerWidget {
     );
   }
 
+  void _confirmDelete(BuildContext context, WidgetRef ref, ProductModel product) {
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.creamCard,
+        title: const Text('Delete Product'),
+        content: Text('Are you sure you want to delete "${product.nameEnglish}"?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            style: TextButton.styleFrom(foregroundColor: AppColors.errorRed),
+            onPressed: () async {
+              await ref
+                  .read(catalogRepositoryProvider)
+                  .deleteProduct(product.id);
+              ref.invalidate(allProductsProvider);
+              ref.invalidate(popularProductsProvider);
+              if (ctx.mounted) {
+                Navigator.pop(ctx);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Product deleted.')),
+                );
+              }
+            },
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final productsAsync = ref.watch(popularProductsProvider);
+    final productsAsync = ref.watch(allProductsProvider);
 
     return Scaffold(
       backgroundColor: AppColors.creamBackground,
       appBar: AppBar(
         title: const Text('Manage Products'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.add_rounded),
+            tooltip: '+ Add Product',
+            onPressed: () => _showProductFormDialog(context, ref),
+          ),
+        ],
       ),
-      bottomNavigationBar: Padding(
-        padding: const EdgeInsets.all(16),
-        child: GoldButton(
-          text: '+ Add Product / નવી પ્રોડક્ટ ઉમેરો',
-          icon: Icons.add,
-          onPressed: () => _showAddProductDialog(context, ref),
-          width: double.infinity,
-        ),
+      floatingActionButton: FloatingActionButton.extended(
+        backgroundColor: AppColors.goldStart,
+        foregroundColor: AppColors.goldButtonText,
+        icon: const Icon(Icons.add),
+        label: const Text('+ Add Product'),
+        onPressed: () => _showProductFormDialog(context, ref),
       ),
       body: productsAsync.when(
-        data: (products) => ListView.separated(
-          padding: const EdgeInsets.all(16),
-          itemCount: products.length,
-          separatorBuilder: (_, __) => const SizedBox(height: 12),
-          itemBuilder: (context, index) {
-            final p = products[index];
-            return GlassCard(
-              padding: const EdgeInsets.all(12),
-              child: Row(
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: ProductImage(
-                      imageUrl: p.images.first,
-                      width: 60,
-                      height: 60,
+        data: (products) {
+          if (products.isEmpty) {
+            return const Center(child: Text('No products found.'));
+          }
+
+          return ListView.separated(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 80),
+            itemCount: products.length,
+            separatorBuilder: (_, __) => const SizedBox(height: 12),
+            itemBuilder: (context, index) {
+              final item = products[index];
+
+              return GlassCard(
+                padding: const EdgeInsets.all(12),
+                child: Row(
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: ProductImage(
+                        imageUrl: item.images.first,
+                        width: 64,
+                        height: 64,
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          '${p.nameEnglish} / ${p.nameGujarati}',
-                          style: AppTypography.dynamicBody(p.nameEnglish, fontSize: 13, fontWeight: FontWeight.bold),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'Sizes: ${p.sizes.join(", ")}',
-                          style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          p.showPrice && p.pricePerSqFt != null
-                              ? '₹ ${p.pricePerSqFt}/sq ft (Visible)'
-                              : AppConfig.inquiryPriceEnglish,
-                          style: const TextStyle(fontSize: 11, color: AppColors.goldDark, fontWeight: FontWeight.w600),
-                        ),
-                      ],
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            item.nameEnglish,
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            item.nameGujarati,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Row(
+                            children: [
+                              Text(
+                                item.showPrice && item.pricePerSqFt != null
+                                    ? '₹ ${item.pricePerSqFt!.toStringAsFixed(0)} / sqft'
+                                    : 'Price Hidden (Inquiry)',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                  color: item.showPrice
+                                      ? AppColors.goldDark
+                                      : AppColors.textSecondary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.delete_outline, color: AppColors.errorRed, size: 20),
-                    onPressed: () async {
-                      await ref.read(catalogRepositoryProvider).deleteProduct(p.id);
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Product deleted')),
-                        );
-                      }
-                    },
-                  ),
-                ],
-              ),
-            );
-          },
+                    IconButton(
+                      icon: const Icon(Icons.edit_outlined, size: 20),
+                      onPressed: () => _showProductFormDialog(
+                        context,
+                        ref,
+                        existing: item,
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(
+                        Icons.delete_outline,
+                        color: AppColors.errorRed,
+                        size: 20,
+                      ),
+                      onPressed: () => _confirmDelete(context, ref, item),
+                    ),
+                  ],
+                ),
+              );
+            },
+          );
+        },
+        loading: () => const Center(
+          child: CircularProgressIndicator(
+            valueColor: AlwaysStoppedAnimation<Color>(AppColors.goldStart),
+          ),
         ),
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Error: $e')),
+        error: (err, _) => Center(child: Text('Error: $err')),
       ),
     );
   }

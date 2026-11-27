@@ -1,3 +1,4 @@
+import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_typography.dart';
@@ -24,27 +25,94 @@ class AdminReportsScreen extends StatelessWidget {
             ),
             const SizedBox(height: 14),
 
-            // Visual Monthly Inquiry Volume Chart (Bars)
+            // Bar chart using fl_chart (NO SALES FIGURES)
             GlassCard(
-              padding: const EdgeInsets.all(18),
+              padding: const EdgeInsets.fromLTRB(16, 20, 16, 16),
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      _buildMonthBar('Jul', 35),
-                      _buildMonthBar('Aug', 58),
-                      _buildMonthBar('Sep', 42),
-                      _buildMonthBar('Oct', 78),
-                      _buildMonthBar('Nov', 95, isCurrent: true),
-                      _buildMonthBar('Dec', 60),
-                    ],
+                  SizedBox(
+                    height: 180,
+                    child: BarChart(
+                      BarChartData(
+                        gridData: const FlGridData(show: false),
+                        borderData: FlBorderData(show: false),
+                        titlesData: FlTitlesData(
+                          leftTitles: const AxisTitles(
+                            sideTitles: SideTitles(showTitles: false),
+                          ),
+                          topTitles: const AxisTitles(
+                            sideTitles: SideTitles(showTitles: false),
+                          ),
+                          rightTitles: const AxisTitles(
+                            sideTitles: SideTitles(showTitles: false),
+                          ),
+                          bottomTitles: AxisTitles(
+                            sideTitles: SideTitles(
+                              showTitles: true,
+                              getTitlesWidget: (val, _) {
+                                const months = [
+                                  'Jul',
+                                  'Aug',
+                                  'Sep',
+                                  'Oct',
+                                  'Nov',
+                                  'Dec'
+                                ];
+                                final idx = val.toInt();
+                                if (idx >= 0 && idx < months.length) {
+                                  return Padding(
+                                    padding: const EdgeInsets.only(top: 6),
+                                    child: Text(
+                                      months[idx],
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        fontWeight: idx == 4
+                                            ? FontWeight.bold
+                                            : FontWeight.normal,
+                                        color: idx == 4
+                                            ? AppColors.goldDark
+                                            : AppColors.textSecondary,
+                                      ),
+                                    ),
+                                  );
+                                }
+                                return const SizedBox();
+                              },
+                            ),
+                          ),
+                        ),
+                        barGroups: [
+                          _buildBarGroup(0, 35),
+                          _buildBarGroup(1, 58),
+                          _buildBarGroup(2, 42),
+                          _buildBarGroup(3, 78),
+                          _buildBarGroup(4, 95, isCurrent: true),
+                          _buildBarGroup(5, 60),
+                        ],
+                      ),
+                    ),
                   ),
-                  const SizedBox(height: 12),
-                  const Text(
-                    'Total Enquiries This Month: 95',
-                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: AppColors.goldDark),
+                  const Divider(height: 24),
+                  const Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Total Enquiries This Month:',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      Text(
+                        '95 Enquiries',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.goldDark,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -61,13 +129,29 @@ class AdminReportsScreen extends StatelessWidget {
               padding: EdgeInsets.all(16),
               child: Column(
                 children: [
-                  _CategoryRankRow(rank: 1, name: 'Vitrified Tiles (વિટ્રીફાઈડ ટાઈલ્સ)', count: '48 enquiries'),
+                  _CategoryRankRow(
+                    rank: 1,
+                    name: 'Vitrified Tiles (વિટ્રીફાઈડ ટાઈલ્સ)',
+                    count: '48 enquiries',
+                  ),
                   Divider(height: 16),
-                  _CategoryRankRow(rank: 2, name: 'Glazed Tiles (ગ્લેઝ ટાઈલ્સ)', count: '32 enquiries'),
+                  _CategoryRankRow(
+                    rank: 2,
+                    name: 'Glazed Tiles (ગ્લેઝ ટાઈલ્સ)',
+                    count: '32 enquiries',
+                  ),
                   Divider(height: 16),
-                  _CategoryRankRow(rank: 3, name: 'Digital Elevation (ડિજીટલ ટાઈલ્સ)', count: '24 enquiries'),
+                  _CategoryRankRow(
+                    rank: 3,
+                    name: 'Digital Elevation (ડિજીટલ ટાઈલ્સ)',
+                    count: '24 enquiries',
+                  ),
                   Divider(height: 16),
-                  _CategoryRankRow(rank: 4, name: 'Parking Tiles (પાર્કિંગ ટાઈલ્સ)', count: '18 enquiries'),
+                  _CategoryRankRow(
+                    rank: 4,
+                    name: 'Parking Tiles (પાર્કિંગ ટાઈલ્સ)',
+                    count: '18 enquiries',
+                  ),
                 ],
               ),
             ),
@@ -77,19 +161,16 @@ class AdminReportsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildMonthBar(String month, double heightPct, {bool isCurrent = false}) {
-    return Column(
-      children: [
-        Container(
-          width: 32,
-          height: heightPct * 1.2,
-          decoration: BoxDecoration(
-            color: isCurrent ? AppColors.goldStart : AppColors.goldStart.withAlpha(80),
-            borderRadius: BorderRadius.circular(6),
-          ),
+  BarChartGroupData _buildBarGroup(int x, double y, {bool isCurrent = false}) {
+    return BarChartGroupData(
+      x: x,
+      barRods: [
+        BarChartRodData(
+          toY: y,
+          color: isCurrent ? AppColors.goldStart : const Color(0xFFD9C5A3),
+          width: 18,
+          borderRadius: BorderRadius.circular(6),
         ),
-        const SizedBox(height: 8),
-        Text(month, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
       ],
     );
   }
@@ -111,16 +192,23 @@ class _CategoryRankRow extends StatelessWidget {
     return Row(
       children: [
         Container(
-          width: 24,
-          height: 24,
-          decoration: const BoxDecoration(
-            color: AppColors.creamBackground,
+          width: 28,
+          height: 28,
+          decoration: BoxDecoration(
             shape: BoxShape.circle,
+            color: rank == 1
+                ? AppColors.goldStart
+                : AppColors.creamCardBorder,
           ),
-          alignment: Alignment.center,
-          child: Text(
-            '$rank',
-            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.goldDark),
+          child: Center(
+            child: Text(
+              '$rank',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                color: rank == 1 ? AppColors.goldButtonText : AppColors.textPrimary,
+              ),
+            ),
           ),
         ),
         const SizedBox(width: 12),
